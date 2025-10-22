@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: illuminate-test
+  labels:
+    name: illuminate-test
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: illuminate-test-petclinic
+  namespace: illuminate-test
+  labels:
+    app.kubernetes.io/name: illuminate-test-petclinic
+    app: illuminate-test-petclinic
+  annotations:
+    languageStack: java
+spec:
+  dnsPolicy: ClusterFirstWithHostNet
+  containers:
+    - name: spring-petclinic-rest
+      image: springcommunity/spring-petclinic-rest
+      ports:
+        - containerPort: 9966
+          name: petclinic
+      env:
+        - name: JAVA_OPTS
+          value: "-Xmx80m"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: illuminate-test
+  name: illuminate-test-petclinic
+spec:
+  selector:
+    app: illuminate-test-petclinic
+  ports:
+    - protocol: TCP
+      name: petclinic
+      port: 9966
+      targetPort: 9966
