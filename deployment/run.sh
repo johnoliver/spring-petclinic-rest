@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z ${JAVA_OPTS+x} ]; then
-    JAVA_OPTS=""
+    JAVA_OPTS="-Xmx80m"
 fi
 
 if [ -z ${DISABLE_MONITORING+x} ]; then
