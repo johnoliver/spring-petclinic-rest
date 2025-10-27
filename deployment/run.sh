@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z ${JAVA_OPTS+x} ]; then
-    JAVA_OPTS="-Xmx80m"
+    JAVA_OPTS="-Xms157m -Xmx157m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 fi
 
 if [ -z ${DISABLE_MONITORING+x} ]; then

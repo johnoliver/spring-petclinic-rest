@@ -27,7 +27,14 @@ spec:
           name: petclinic
       env:
         - name: JAVA_OPTS
-          value: "-Xmx80m"
+          value: "-Xms157m -Xmx157m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "250m"
+        limits:
+          memory: "512Mi"
+          cpu: "1000m"
 
 ---
 
