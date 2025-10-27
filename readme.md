@@ -321,6 +321,124 @@ This project contains **non-regression tests** for the Petclinic API, built with
     ```
 > Note: You can use your currently bash installed. Like: "bash postman-tests.sh"
 
+## JVM Tuning and Performance Optimization
+
+This application is configured with optimized JVM settings to ensure good performance under load while managing garbage collection overhead effectively.
+
+### Default JVM Settings
+
+The application uses the following default JVM configuration (defined in `deployment/run.sh` and `deployment/deploy.yaml`):
+
+```bash
+-Xms157m -Xmx157m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+```
+
+**Configuration details:**
+- **Heap Size**: 157 MB (min and max set equal for stability)
+- **GC Algorithm**: G1 Garbage Collector (G1GC)
+- **Max GC Pause**: 200ms target
+
+### Why These Settings?
+
+These settings were chosen based on performance diagnostics that showed:
+- Estimated live data set: ~63 MB
+- Required heap headroom: ~2.5x the live set size
+- Target GC overhead: <10% (down from 25.3%)
+- Acceptable pause time: 200ms
+
+### Kubernetes Resource Configuration
+
+The deployment manifest (`deployment/deploy.yaml`) includes resource requests and limits to ensure the container has adequate memory:
+
+```yaml
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "1000m"
+```
+
+The memory request (256Mi) provides headroom beyond the JVM heap for:
+- Native memory (threads, code cache, etc.)
+- Container overhead
+- Monitoring agents (Application Insights, OpenTelemetry)
+
+### Customizing JVM Settings
+
+You can override the default JVM settings by setting the `JAVA_OPTS` environment variable:
+
+**Docker:**
+```bash
+docker run -e JAVA_OPTS="-Xms256m -Xmx256m -XX:+UseG1GC" -p 9966:9966 springcommunity/spring-petclinic-rest
+```
+
+**Kubernetes:**
+```yaml
+env:
+  - name: JAVA_OPTS
+    value: "-Xms256m -Xmx256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+```
+
+**Important:** If you increase the JVM heap size, ensure you also update the Kubernetes `resources.requests.memory` and `resources.limits.memory` accordingly.
+
+### Monitoring GC Performance
+
+To monitor GC behavior in production, you can:
+
+1. **Enable GC logging** (add to `JAVA_OPTS`):
+   ```bash
+   -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags
+   ```
+
+2. **Use JVM metrics** via Spring Boot Actuator:
+   - Endpoint: `http://localhost:9966/petclinic/actuator/metrics/jvm.gc.pause`
+   - Endpoint: `http://localhost:9966/petclinic/actuator/metrics/jvm.memory.used`
+
+3. **Monitor via Application Insights** (if enabled in AKS):
+   - GC metrics are automatically collected
+   - Check Performance blade for GC overhead and pause times
+
+### Troubleshooting
+
+**Symptom: High GC overhead (>10%)**
+- Increase heap size (e.g., `-Xmx256m`)
+- Ensure Kubernetes memory limits are adequate
+- Profile with JFR to identify allocation hotspots
+
+**Symptom: OutOfMemoryError**
+- Increase both JVM heap (`-Xmx`) AND Kubernetes memory limits
+- Check for memory leaks using heap dump analysis
+
+**Symptom: Long GC pauses (>200ms)**
+- Tune `-XX:MaxGCPauseMillis` (e.g., 100ms for lower latency)
+- Consider switching to ZGC for ultra-low latency: `-XX:+UseZGC`
+
+### Rolling Back JVM Changes
+
+If you need to revert to previous settings:
+
+1. **Edit deployment manifest:**
+   ```bash
+   kubectl edit pod illuminate-test-petclinic -n illuminate-test
+   ```
+   
+2. **Change `JAVA_OPTS` back to:**
+   ```yaml
+   - name: JAVA_OPTS
+     value: "-Xmx80m"
+   ```
+
+3. **Restart the pod:**
+   ```bash
+   kubectl delete pod illuminate-test-petclinic -n illuminate-test
+   ```
+
+For more information on JVM tuning, see:
+- [Java HotSpot VM Options](https://www.oracle.com/java/technologies/javase/vmoptions-jsp.html)
+- [G1GC Tuning Guide](https://docs.oracle.com/en/java/javase/21/gctuning/garbage-first-g1-garbage-collector1.html)
+
 ## Interesting Spring Petclinic forks
 
 The Spring Petclinic master branch in the main [spring-projects](https://github.com/spring-projects/spring-petclinic)
