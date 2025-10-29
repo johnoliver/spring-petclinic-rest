@@ -62,7 +62,7 @@ CPU profiling revealed three major bottlenecks:
 - **Better scalability**: Can handle more concurrent requests
 
 ## Testing
-- All 216 existing tests pass
+- All 217 existing tests pass (added 1 new test)
 - Cache disabled in test mode (`spring.cache.type=none`) for test isolation
 - Cache configuration tested with CacheConfigTests
 

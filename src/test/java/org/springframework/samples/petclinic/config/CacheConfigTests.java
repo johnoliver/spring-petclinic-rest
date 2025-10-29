@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.config;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests for cache configuration.
  * Note: Caching is disabled in test mode (spring.cache.type=none in test application.properties)
- * so this test verifies that the NoOpCacheManager is used during tests.
+ * so this test verifies that caching is properly disabled during tests.
  */
 @SpringBootTest
 class CacheConfigTests {
@@ -34,10 +35,19 @@ class CacheConfigTests {
     private CacheManager cacheManager;
 
     @Test
-    void testCacheManagerIsConfigured() {
+    void testCachingIsDisabledInTestMode() {
         // In test mode, caching is disabled (spring.cache.type=none)
-        // So cacheManager should be a NoOpCacheManager
+        // Verify that cache operations are no-ops
         assertThat(cacheManager).isNotNull();
-        assertThat(cacheManager.getClass().getSimpleName()).contains("NoOp");
+        
+        // Try to get a cache - it should return a no-op cache
+        Cache cache = cacheManager.getCache("vets");
+        assertThat(cache).isNotNull();
+        
+        // Verify cache operations don't actually store anything
+        cache.put("testKey", "testValue");
+        Cache.ValueWrapper result = cache.get("testKey");
+        // In NoOpCacheManager, get always returns null
+        assertThat(result).isNull();
     }
 }
