@@ -37,7 +37,9 @@ public class BasicAuthenticationConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests((authz) -> authz
                 .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(Customizer.withDefaults())
+            .securityContext((securityContext) -> securityContext
+                .requireExplicitSave(false)); // Reduce per-request SecurityContext overhead
         // @formatter:on
         return http.build();
     }
