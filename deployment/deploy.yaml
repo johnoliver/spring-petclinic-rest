@@ -27,7 +27,7 @@ spec:
           name: petclinic
       env:
         - name: JAVA_OPTS
-          value: "-Xmx80m"
+          value: "-Xmx120m"
 
 ---
 
