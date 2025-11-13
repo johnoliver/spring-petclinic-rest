@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.orm.ObjectRetrievalFailureException;
@@ -92,24 +94,28 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "vets", key = "#id", unless = "#result == null")
     public Vet findVetById(int id) throws DataAccessException {
         return findEntityById(() -> vetRepository.findById(id));
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allVets", unless = "#result == null || #result.isEmpty()")
     public Collection<Vet> findAllVets() throws DataAccessException {
         return vetRepository.findAll();
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"vets", "allVets"}, allEntries = true)
     public void saveVet(Vet vet) throws DataAccessException {
         vetRepository.save(vet);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"vets", "allVets"}, allEntries = true)
     public void deleteVet(Vet vet) throws DataAccessException {
         vetRepository.delete(vet);
     }
@@ -128,54 +134,63 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "petTypes", key = "#petTypeId", unless = "#result == null")
     public PetType findPetTypeById(int petTypeId) {
         return findEntityById(() -> petTypeRepository.findById(petTypeId));
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allPetTypes", unless = "#result == null || #result.isEmpty()")
     public Collection<PetType> findAllPetTypes() throws DataAccessException {
         return petTypeRepository.findAll();
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"petTypes", "allPetTypes"}, allEntries = true)
     public void savePetType(PetType petType) throws DataAccessException {
         petTypeRepository.save(petType);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"petTypes", "allPetTypes"}, allEntries = true)
     public void deletePetType(PetType petType) throws DataAccessException {
         petTypeRepository.delete(petType);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "specialties", key = "#specialtyId", unless = "#result == null")
     public Specialty findSpecialtyById(int specialtyId) {
         return findEntityById(() -> specialtyRepository.findById(specialtyId));
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allSpecialties", unless = "#result == null || #result.isEmpty()")
     public Collection<Specialty> findAllSpecialties() throws DataAccessException {
         return specialtyRepository.findAll();
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"specialties", "allSpecialties"}, allEntries = true)
     public void saveSpecialty(Specialty specialty) throws DataAccessException {
         specialtyRepository.save(specialty);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"specialties", "allSpecialties"}, allEntries = true)
     public void deleteSpecialty(Specialty specialty) throws DataAccessException {
         specialtyRepository.delete(specialty);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allPetTypes", unless = "#result == null || #result.isEmpty()")
     public Collection<PetType> findPetTypes() throws DataAccessException {
         return petRepository.findPetTypes();
     }
@@ -208,6 +223,7 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allVets", unless = "#result == null || #result.isEmpty()")
     public Collection<Vet> findVets() throws DataAccessException {
         return vetRepository.findAll();
     }
@@ -233,6 +249,7 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "allSpecialties", unless = "#result == null || #result.isEmpty()")
     public List<Specialty> findSpecialtiesByNameIn(Set<String> names) {
         return findEntityById(() -> specialtyRepository.findSpecialtiesByNameIn(names));
     }
